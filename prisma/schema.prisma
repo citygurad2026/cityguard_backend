@@ -1,0 +1,583 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  OWNER
+  ADMIN
+}
+
+enum BannerType {
+  MAIN_HERO
+  SIDE_BANNER
+  POPUP
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AUDIO
+}
+
+enum AdTargetType {
+  BUSINESS
+  LISTING
+  CATEGORY
+  EXTERNAL
+}
+enum AdStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  PAUSED
+}
+
+enum BusinessStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}
+
+enum ReportType {
+  USER
+  BUSINESS
+  REVIEW
+  AD
+  MESSAGE
+  EVENT
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  username         String            @unique
+  phone            String?           @unique
+  password         String
+  name             String?
+  role             Role              @default(USER)
+  avatarUrl        String?
+  bio              String?
+  refreshToken     String?
+  isActive         Boolean           @default(true)
+  lastLogin        DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  ownedBusinesses  Business[]        @relation("BusinessOwner")
+  reviews          Review[]
+  favorites        Favorite[]
+  notifications    Notification[]
+  chatParticipants ChatParticipant[]
+  sentReports      Report[]          @relation("ReportReporter")
+  follows          Follow[]
+  bookmarks        Bookmark[]
+  sentMessages     Message[]         @relation("MessageSender")
+  media            Media[]           @relation("UserMedia")
+  hostedStreams    LiveStream[]      // مقابل LiveStream.host
+  bloodRequests    BloodRequest[]    // مقابل BloodRequest.requester
+  competitionsWon  Competition[]     // مقابل Competition.winner
+  sessions         Session[]
+  @@index([username], name: "idx_user_username")
+  @@index([phone], name: "idx_user_phone")
+  @@map("users")
+}
+model Session {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  isValid    Boolean  @default(true)
+}
+
+
+model Business {
+  id               Int               @id @default(autoincrement())
+  ownerId          Int
+  name             String
+  slug             String            @unique
+  description      String?
+  categoryId       Int?
+  tags             String
+  address          String?
+  city             String?
+  region           String?
+  phone            String?
+  mobile           String?
+  website          String?
+  status           BusinessStatus    @default(PENDING)
+  featured         Boolean           @default(false)
+  lat              Float?
+  lng              Float?
+  openingHours     Json?
+  isVerified       Boolean           @default(false)
+  verificationDate DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  owner         User              @relation("BusinessOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  category      Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  media         Media[]
+  events        Event[]
+  reviews       Review[]
+  favorites     Favorite[]
+  ads           Ad[]              @relation("BusinessAds")
+  stats         BusinessStats[]
+  bookmarks     Bookmark[]
+  follows       Follow[]
+  jobs          Job[]
+
+  @@index([name], name: "idx_business_name")
+  @@index([slug], name: "idx_business_slug")
+  @@index([city, region], name: "idx_business_location")
+  @@index([status], name: "idx_business_status")
+  @@index([featured], name: "idx_business_featured")
+  @@index([ownerId], name: "idx_business_owner")
+  @@map("businesses")
+}
+
+model Category {
+  id          Int         @id @default(autoincrement())
+  name        String
+  slug        String      @unique
+  description String?
+  imageUrl    String?
+  parentId    Int?
+  sortOrder   Int         @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  parent      Category?   @relation("CategoryChildren", fields: [parentId], references: [id])
+  children    Category[]  @relation("CategoryChildren")
+  businesses  Business[]
+
+  @@index([slug], name: "idx_category_slug")
+  @@index([parentId], name: "idx_category_parent")
+  @@map("categories")
+}
+
+model Media {
+  id          Int       @id @default(autoincrement())
+  url         String
+  publicId    String?
+  type        MediaType @default(IMAGE)
+  altText     String?
+  title       String?
+  description String?
+  order       Int       @default(0)
+  businessId  Int?
+  eventId     Int?
+  userId      Int?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  event       Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User?     @relation("UserMedia", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([businessId], name: "idx_media_business")
+  @@index([type], name: "idx_media_type")
+  @@map("media")
+}
+
+model Review {
+  id          Int           @id @default(autoincrement())
+  businessId  Int
+  userId      Int
+  rating      Int
+  title       String?
+  comment     String?
+  status      ReviewStatus  @default(PENDING)
+  isVerified  Boolean       @default(false)
+  helpful     Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, userId], name: "unique_business_user_review")
+  @@index([businessId], name: "idx_review_business")
+  @@index([userId], name: "idx_review_user")
+  @@index([rating], name: "idx_review_rating")
+  @@index([status], name: "idx_review_status")
+  @@map("reviews")
+}
+
+model Favorite {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  businessId  Int
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId], name: "unique_user_business_favorite")
+  @@index([userId], name: "idx_favorite_user")
+  @@map("favorites")
+}
+
+model Bookmark {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  businessId  Int
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId], name: "unique_user_business_bookmark")
+  @@index([userId], name: "idx_bookmark_user")
+  @@map("bookmarks")
+}
+
+model Ad {
+  id             Int           @id @default(autoincrement())
+  title          String
+  content        String?
+  imageUrl       String?
+  mobileImageUrl String?
+  tabletImageUrl String?
+  ctaText        String?
+  ctaUrl         String?
+  backgroundColor String?
+  textColor       String?
+  bannerType BannerType @default(MAIN_HERO) @map("banner_type")
+  targetType     AdTargetType
+  targetId       Int?
+  url            String?
+  budget         Float?        @default(0)
+  priority       Int           @default(0)
+  clicks         Int           @default(0)
+  impressions    Int           @default(0)
+
+  startAt        DateTime
+  endAt          DateTime
+
+  status         AdStatus      @default(PENDING_REVIEW)
+  isActive       Boolean       @default(false)
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  business Business? @relation("BusinessAds", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([targetType, targetId])
+  @@index([status, isActive])
+  @@index([startAt, endAt])
+}
+
+model Event {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  businessId  Int
+  address     String?
+  city        String?
+  region      String?
+  lat         Float?
+  lng         Float?
+  price       Float?        @default(0)
+  capacity    Int?
+  isPublic    Boolean       @default(true)
+  status      String        @default("upcoming")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  media       Media[]
+  liveStream  LiveStream?
+
+  @@index([businessId], name: "idx_event_business")
+  @@index([startDate, endDate], name: "idx_event_dates")
+  @@index([city, region], name: "idx_event_location")
+  @@map("events")
+}
+
+model BusinessStats {
+  id          Int       @id @default(autoincrement())
+  businessId  Int
+  views       Int       @default(0)
+  clicks      Int       @default(0)
+  calls       Int       @default(0)
+  shares      Int       @default(0)
+  date        DateTime  @default(now())
+
+  // Relations
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, date], name: "unique_business_date_stats")
+  @@index([businessId], name: "idx_stats_business")
+  @@index([date], name: "idx_stats_date")
+  @@map("business_stats")
+}
+
+model Chat {
+  id              Int               @id @default(autoincrement())
+  type            String            @default("private")
+  title           String?
+  description     String?
+  imageUrl        String?
+  lastMessageId   Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  lastActiveAt    DateTime?         @default(now())
+
+  // Relations
+  participants    ChatParticipant[]
+  messages        Message[]
+
+  @@index([lastActiveAt], name: "idx_chat_last_active")
+  @@map("chats")
+}
+
+model ChatParticipant {
+  id        Int       @id @default(autoincrement())
+  chatId    Int
+  userId    Int
+  role      String    @default("member")
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+  unreadCount Int     @default(0)
+
+  // Relations
+  chat      Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId], name: "unique_chat_participant")
+  @@index([userId], name: "idx_participant_user")
+  @@map("chat_participants")
+}
+
+model Message {
+  id          Int       @id @default(autoincrement())
+  chatId      Int
+  senderId    Int
+  content     String?
+  mediaUrl    String?
+  mediaType   String?
+  isEdited    Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  chat        Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender      User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([chatId], name: "idx_message_chat")
+  @@index([senderId], name: "idx_message_sender")
+  @@index([createdAt], name: "idx_message_created")
+  @@map("messages")
+}
+
+model LiveStream {
+  id          Int       @id @default(autoincrement())
+  eventId     Int?
+  hostId      Int
+  provider    String
+  roomId      String
+  streamUrl   String?
+  title       String
+  description String?
+  isActive    Boolean   @default(false)
+  viewerCount Int       @default(0)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  event       Event?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  host        User      @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId], name: "unique_event_stream")
+  @@index([hostId], name: "idx_stream_host")
+  @@index([isActive], name: "idx_stream_active")
+  @@map("live_streams")
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  title       String
+  message     String
+  type        String
+  link        String?
+  meta        Json?
+  isRead      Boolean   @default(false)
+  sentAt      DateTime  @default(now())
+  readAt      DateTime?
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "idx_notification_user")
+  @@index([isRead], name: "idx_notification_read")
+  @@index([sentAt], name: "idx_notification_sent")
+  @@map("notifications")
+}
+
+model Report {
+  id            Int           @id @default(autoincrement())
+  reporterId    Int
+  reportedType  ReportType
+  reportedId    Int
+  reason        String
+  details       String?
+  status        ReportStatus  @default(PENDING)
+  adminNotes    String?
+  actionTaken   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  reporter      User          @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId], name: "idx_report_reporter")
+  @@index([reportedType, reportedId], name: "idx_report_reported")
+  @@index([status], name: "idx_report_status")
+  @@map("reports")
+}
+
+model Follow {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  businessId  Int
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId], name: "unique_user_business_follow")
+  @@index([userId], name: "idx_follow_user")
+  @@index([businessId], name: "idx_follow_business")
+  @@map("follows")
+}
+
+model Job {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  businessId  Int?
+  city        String?
+  region      String?
+  type        String?
+  salary      String?
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId], name: "idx_job_business")
+  @@index([type], name: "idx_job_type")
+  @@map("jobs")
+}
+
+model Professional {
+  id          Int       @id @default(autoincrement())
+  name        String
+  service     String
+  phone       String?
+  email       String?
+  city        String?
+  region      String?
+  rating      Float?
+  reviewCount Int       @default(0)
+  isVerified  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([service], name: "idx_professional_service")
+  @@index([city, region], name: "idx_professional_location")
+  @@map("professionals")
+}
+
+model BloodRequest {
+  id           Int       @id @default(autoincrement())
+  requesterId  Int?
+  bloodType    String
+  units        Int       @default(1)
+  urgency      String    @default("normal")
+  city         String?
+  hospital     String?
+  contactPhone String?
+  notes        String?
+  status       String    @default("open")
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  requester    User?     @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+
+  @@index([bloodType], name: "idx_blood_request_type")
+  @@index([city], name: "idx_blood_request_city")
+  @@index([status], name: "idx_blood_request_status")
+  @@map("blood_requests")
+}
+
+model Competition {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  imageUrl     String?
+  startDate    DateTime
+  endDate      DateTime
+  prize        String?
+  rules        String?
+  isActive     Boolean   @default(true)
+  winnerId     Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  winner       User?     @relation(fields: [winnerId], references: [id], onDelete: SetNull)
+
+  @@index([startDate], name: "idx_competition_startDate")
+  @@index([endDate], name: "idx_competition_endDate")
+  @@index([isActive], name: "idx_competition_active")
+  @@map("competitions")
+}
+
+
+
+

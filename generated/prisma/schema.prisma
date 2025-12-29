@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  password      String
+  name          String?
+  role          String         @default("user")
+  phone         String?
+  businesses    Business[]
+  favorites     Favorite[]
+  reviews       Review[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Business {
+  id           Int        @id @default(autoincrement())
+  name         String
+  ownerId      Int
+  description  String?
+  categoryId   Int?
+  category     Category?  @relation(fields: [categoryId], references: [id])
+  tags         String?
+  address      String?
+  city         String?
+  region       String?
+  phone        String?
+  status       String     @default("pending")
+  featured     Boolean    @default(false)
+  owner        User       @relation(fields: [ownerId], references: [id])
+  media        Media[]
+  reviews      Review[]
+  favorites    Favorite[]
+  events       Event[]
+  lat          Float?
+  lng          Float?
+  openingHours Json? // {day: "mon", open: "09:00", close: "17:00"}
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Category {
+  id         Int        @id @default(autoincrement())
+  name       String
+  businesses Business[]
+}
+
+model Media {
+  id         Int      @id @default(autoincrement())
+  url        String
+  businessId Int
+  altText    String?
+  order      Int      @default(0)
+  business   Business @relation(fields: [businessId], references: [id])
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  userId     Int
+  rating     Int
+  title      String?
+  comment    String?
+  status     String   @default("pending")
+  user       User     @relation(fields: [userId], references: [id])
+  business   Business @relation(fields: [businessId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  businessId Int
+  user       User     @relation(fields: [userId], references: [id])
+  business   Business @relation(fields: [businessId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  title   String
+  message String
+  link    String?
+  read    Boolean  @default(false)
+  user    User     @relation(fields: [userId], references: [id])
+  sentAt  DateTime @default(now())
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  businessId  Int?
+  address     String?
+  city        String?
+  region      String?
+  imageUrl    String?
+  business    Business? @relation(fields: [businessId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model BusinessStats {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  views      Int      @default(0)
+  clicks     Int      @default(0)
+  calls      Int      @default(0)
+  date       DateTime @default(now())
+}
