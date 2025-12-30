@@ -15,21 +15,21 @@ dotenv.config();
 const app = express();
 
 // ====== MIDDLEWARES ======
-const allowedOrigins = [
+/* const allowedOrigins = [
   "http://localhost:3000",
   "https://cityguard-ten.vercel.app",
-];
+]; */
 
-app.use(cors({
-  origin: function (origin, callback) {
+app.use(cors(
+ /*  origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,
-}));
+  credentials: true, */
+));
 app.use(morgan('dev'));
 app.use(express.json());
 
