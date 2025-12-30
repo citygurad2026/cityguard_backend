@@ -28,7 +28,7 @@ export const adminCreateUser = async (req: Request, res: Response) => {
         ok: false, 
         message: "غير مصرح - للمشرفين فقط" 
       });
-    }
+    } 
 
     // التحقق من البيانات
     if (!username || !password || !name) {
