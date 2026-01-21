@@ -47,13 +47,13 @@ adrouter.put(
 // ==== تعديل إعلان (ADMIN أو OWNER حسب ملكيته) ====
 adrouter.put(
   "/update-ad/:id",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "OWNER"]),
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "mobileImage", maxCount: 1 },
     { name: "tabletImage", maxCount: 1 },
   ]),
-  authMiddleware,
-  roleMiddleware(["ADMIN", "OWNER"]),
   adController.updateAd
 );
 

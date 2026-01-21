@@ -285,13 +285,12 @@ export const loginUser = async (req: Request, res: Response) => {
         isValid: true,
       },
     });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict", 
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false, // أو فقط false أثناء localhost
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
 
     res.json({
       ok: true,

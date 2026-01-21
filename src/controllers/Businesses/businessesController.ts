@@ -268,19 +268,19 @@ export const getBusinessById = async (req: Request, res: Response) => {
   }
 
   const userId = user.id;
-  const businessId = parseInt(id);
+  /* const businessId = parseInt(id); */
 
-  if (isNaN(businessId)) {
+/*   if (isNaN(businessId)) {
     return res.status(400).json({
       ok: false,
       message: "معرف العمل غير صالح"
     });
-  }
+  } */
 
   try {
     const business = await prisma.business.findFirst({
       where: { 
-        id: businessId,
+        /* id: businessId, */
         ownerId: userId
       },
       include: {

@@ -9,33 +9,47 @@ import {
   getUsers,
   getActiveSessions,
   adminCreateUser,
+  logoutUser,
+  updateProfile,
   
 } from "../controllers/Users/userController";
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 
-const router = Router();
+const userRoutes = Router();
 
 /* ============================
         AUTH ROUTES
 ============================ */
-router.post("/create",adminCreateUser)
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.post("/refresh-token", refreshToken);
-router.get("/active",getActiveSessions)
-/* ============================
-        USER ROUTES
-============================ */
+userRoutes.post("/create",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  adminCreateUser)
+userRoutes.post("/register", registerUser);
+userRoutes.post("/login", loginUser);
+userRoutes.post('/logout',logoutUser)
+userRoutes.post("/refresh-token", refreshToken);
+userRoutes.get("/getUser/:id", getUser);
+userRoutes.get(
+  "/get-all",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  getUsers
+);
 
-// جلب مستخدم (يتطلب تسجيل دخول)
-router.get("/get-all",getUsers)
-router.get("/getUser/:id", getUser);
+userRoutes.get(
+  "/active",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  getActiveSessions
+);
+
+
 
 
 // تحديث مستخدم (مسموح لصاحب الحساب أو Admin)
-router.patch(
+userRoutes.patch(
   "/update/:id",
   authMiddleware,
   (req: any, res, next) => {
@@ -46,9 +60,15 @@ router.patch(
   },
   updateUser
 );
+// تحديث مستخدم ()
+userRoutes.patch(
+  "/updateprofile/:id",
+  authMiddleware,
+  updateProfile
+);
 
 // حذف مستخدم (Admin فقط)
-router.delete(
+userRoutes.delete(
   "/delete/:id",
   authMiddleware,
   roleMiddleware(["ADMIN"]),
@@ -56,4 +76,5 @@ router.delete(
 );
 
 
-export default router;
+
+export default userRoutes;

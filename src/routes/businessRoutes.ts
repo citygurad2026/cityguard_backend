@@ -3,11 +3,11 @@ import { createBusiness,getOwnerBusinesses,updateBusiness ,getBusinessStats, del
 import { upload } from "../middlewares/uploadMiddleware";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
-const router=Router()
+const BusRouter=Router()
 
-router.post('/createbusinesses',authMiddleware,upload.array('images', 10), createBusiness);
-router.get('/getbusinesses',authMiddleware, getOwnerBusinesses);
-router.put(
+BusRouter.post('/createbusinesses',authMiddleware,upload.array('images', 10), createBusiness);
+BusRouter.get('/getbusinesses',authMiddleware, getOwnerBusinesses);
+BusRouter.put(
   '/updatebusinesses/:id',
   authMiddleware,
   upload.fields([
@@ -17,8 +17,8 @@ router.put(
   updateBusiness
 );
 
-router.get('/getbusinesse/:id',authMiddleware, getBusinessById);
-router.delete('/deletebusinesses/:id',authMiddleware, deleteBusiness);
-router.get('/getbusinessesState/:id/stats',authMiddleware, getBusinessStats);
-router.get('/checkUserBusiness',authMiddleware,checkUserBusiness)
-export default router
+BusRouter.get('/getbusinesse',authMiddleware, getBusinessById);
+BusRouter.delete('/deletebusinesses/:id',authMiddleware, deleteBusiness);
+BusRouter.get('/getbusinessesState/:id/stats',authMiddleware, getBusinessStats);
+BusRouter.get('/checkUserBusiness',authMiddleware,checkUserBusiness)
+export default BusRouter

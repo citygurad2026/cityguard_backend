@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
 import eventRoutes from './routes/eventRoutes';
-import busRoutes from './routes/businessRoutes';
+import BusRouter from './routes/businessRoutes';
 import categoryrouter from './routes/categoryRoutes';
 import path from 'path';
 import adrouter from './routes/adRoutes';
@@ -23,7 +23,7 @@ const allowedOrigins = [
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  methods: ["GET","POST","PUT","DELETE","OPTIONS","PATCH"],
   allowedHeaders: ["Content-Type","Authorization","X-Requested-With"]
 }));
 
@@ -35,7 +35,7 @@ app.use(cookieParser());
 
 // ====== ROUTES ======
 app.use('/api/users', userRoutes);
-app.use('/api/bus', busRoutes);
+app.use('/api/bus', BusRouter);
 app.use('/api/event', eventRoutes);
 app.use('/api/categories', categoryrouter);
 app.use('/api/ads', adrouter);

@@ -562,7 +562,7 @@ export const adController = {
         data: updateData,
       });
 
-      res.json({ message: "تم تحديث الإعلان بنجاح", ad: updated });
+      res.json({ ok:true , ad: updated });
     } catch (err: any) {
       console.error("Error in updateAd:", err);
       res.status(500).json({ message: "خطأ داخلي", error: err.message });
