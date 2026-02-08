@@ -322,11 +322,11 @@ export const loginUser = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     if (isNaN(userId)) {
-      return res.status(400).json({ 
-        ok: false, 
-        message: "معرف المستخدم غير صالح" 
+      return res.status(400).json({
+        ok: false,
+        message: "معرف المستخدم غير صالح",
       });
     }
 
@@ -335,7 +335,7 @@ export const getUser = async (req: Request, res: Response) => {
       select: {
         id: true,
         name: true,
-        username: true,        
+        username: true,
         phone: true,
         avatarUrl: true,
         bio: true,
@@ -343,6 +343,7 @@ export const getUser = async (req: Request, res: Response) => {
         isActive: true,
         createdAt: true,
         lastLogin: true,
+        bookmarks: true,
         ownedBusinesses: {
           select: {
             id: true,
@@ -352,28 +353,43 @@ export const getUser = async (req: Request, res: Response) => {
             _count: {
               select: {
                 reviews: true,
-                favorites: true
-              }
-            }
-          }
+                favorites: true,
+              },
+            },
+          },
         },
+         bloodDonor: {
+      select: {
+        bloodType: true,
+          donations: { select: { id: true } },
+        lastDonation: true,
+        isAvailable: true,
+      },
+    },
+
         reviews: {
           take: 5,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           select: {
             id: true,
             rating: true,
+            title: true,
             comment: true,
+            status: true,
+            helpful: true,
+            isVerified: true,
             createdAt: true,
+            updatedAt: true,
             business: {
               select: {
                 id: true,
                 name: true,
-                slug: true
-              }
-            }
-          }
+                slug: true,
+              },
+            },
+          },
         },
+
         favorites: {
           take: 5,
           select: {
@@ -382,39 +398,52 @@ export const getUser = async (req: Request, res: Response) => {
                 id: true,
                 name: true,
                 slug: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
+
+        notifications: {
+          take: 5,
+          orderBy: { sentAt: "desc" },
+          select: {
+            id: true,
+            title: true,
+            message: true,
+            isRead: true,
+            sentAt: true,
+          },
+        },
+
         _count: {
           select: {
             reviews: true,
             favorites: true,
             sentMessages: true,
-            bookmarks: true
-          }
-        }
+            bookmarks: true,
+          },
+        },
       },
     });
 
     if (!user) {
-      return res.status(404).json({ 
-        ok: false, 
-        message: "المستخدم غير موجود" 
+      return res.status(404).json({
+        ok: false,
+        message: "المستخدم غير موجود",
       });
     }
 
-    res.json({ 
-      ok: true, 
+    res.json({
+      ok: true,
       message: "تم جلب بيانات المستخدم",
-      data: user 
+      data: user,
     });
   } catch (err: any) {
     console.error("Error in getUser:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       ok: false,
       message: "حدث خطأ في جلب بيانات المستخدم",
-      ...(process.env.NODE_ENV === 'development' && { error: err.message })
+      ...(process.env.NODE_ENV === "development" && { error: err.message }),
     });
   }
 };

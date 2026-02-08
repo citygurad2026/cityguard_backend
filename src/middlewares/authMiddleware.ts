@@ -8,7 +8,7 @@ interface IUserPayload {
 
 }
 
-interface AuthRequest extends Request {
+export  interface AuthRequest extends Request {
   user?: {
     id: number;
     role: string;

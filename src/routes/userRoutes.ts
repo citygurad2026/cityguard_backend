@@ -16,7 +16,7 @@ import {
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
-
+import { AuthRequest } from "../middlewares/authMiddleware";
 const userRoutes = Router();
 
 /* ============================
@@ -37,6 +37,16 @@ userRoutes.get(
   roleMiddleware(["ADMIN"]),
   getUsers
 );
+userRoutes.get(
+  "/auth/me",
+  authMiddleware,
+  (req: AuthRequest, res) => {
+    res.status(200).json({
+      user: req.user
+    });
+  }
+);
+
 
 userRoutes.get(
   "/active",

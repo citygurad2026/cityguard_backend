@@ -9,6 +9,8 @@ import BusRouter from './routes/businessRoutes';
 import categoryrouter from './routes/categoryRoutes';
 import path from 'path';
 import adrouter from './routes/adRoutes';
+import bloodRouter from './routes/bloodRequestRoutes';
+import bloodDonorRouter from './routes/bloodDonor.routes';
 
 dotenv.config();
 const app = express();
@@ -39,6 +41,9 @@ app.use('/api/bus', BusRouter);
 app.use('/api/event', eventRoutes);
 app.use('/api/categories', categoryrouter);
 app.use('/api/ads', adrouter);
+app.use('/api/bloodreq',bloodRouter)
+
+app.use('/api/blooddon',bloodDonorRouter)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('/api/health', (req, res) => {
