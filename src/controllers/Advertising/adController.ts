@@ -422,25 +422,19 @@ async updateAdStatus(req: Request, res: Response) {
       tabletImage?: Express.Multer.File[];
     };
 
-    if (files?.image?.[0]) {
-      if (ad.imagePublicId) await deleteFromCloudinary(ad.imagePublicId);
+        if (files?.image?.[0]) {
       const upload = await uploadToCloudinary(files.image[0]);
       req.body.imageUrl = upload.secure_url;
-      req.body.imagePublicId = upload.public_id;
     }
 
     if (files?.mobileImage?.[0]) {
-      if (ad.mobileImagePublicId) await deleteFromCloudinary(ad.mobileImagePublicId);
       const upload = await uploadToCloudinary(files.mobileImage[0]);
       req.body.mobileImageUrl = upload.secure_url;
-      req.body.mobileImagePublicId = upload.public_id;
     }
 
     if (files?.tabletImage?.[0]) {
-      if (ad.tabletImagePublicId) await deleteFromCloudinary(ad.tabletImagePublicId);
       const upload = await uploadToCloudinary(files.tabletImage[0]);
       req.body.tabletImageUrl = upload.secure_url;
-      req.body.tabletImagePublicId = upload.public_id;
     }
 
     // تحديث الإعلان
@@ -465,10 +459,6 @@ async updateAdStatus(req: Request, res: Response) {
 
     const ad = await prisma.ad.findUnique({ where: { id } });
     if (!ad) return res.status(404).json({ message: "غير موجود" });
-
-    if (ad.imagePublicId) await deleteFromCloudinary(ad.imagePublicId);
-    if (ad.mobileImagePublicId) await deleteFromCloudinary(ad.mobileImagePublicId);
-    if (ad.tabletImagePublicId) await deleteFromCloudinary(ad.tabletImagePublicId);
 
     await prisma.ad.delete({ where: { id } });
 

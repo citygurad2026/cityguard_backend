@@ -333,7 +333,6 @@ export const bloodRequestController = {
             select: {
               id: true,
               name: true,
-              profilePicture: true
             }
           }
         }
@@ -516,12 +515,18 @@ export const bloodRequestController = {
         prisma.bloodRequest.groupBy({
           by: ["bloodType"],
           _count: { id: true },
-          where: { status: "open" }
+          where: { status: "open" },
+          orderBy:{
+            bloodType:"asc"
+          }
         }),
         prisma.bloodRequest.groupBy({
           by: ["city"],
           _count: { id: true },
-          where: { status: "open" }
+          where: { status: "open" },
+          orderBy:{
+            city:"asc"
+          }
         }),
         prisma.bloodRequest.count({ 
           where: { 
@@ -645,8 +650,6 @@ export const bloodRequestController = {
             select: {
               id: true,
               name: true,
-              profilePicture: true,
-              email: true,
               phone: true
             }
           }
