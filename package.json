@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
-    "clean": "rmdir /s /q dist",
-    "build": "npm run clean && tsc",
+    "build": " tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only --clear src/server.ts"
   },
