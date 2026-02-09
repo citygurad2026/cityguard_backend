@@ -321,8 +321,6 @@ export const bloodDonorController = {
               select: {
                 id: true,
                 name: true,
-                email: true,
-                profilePicture: true,
                 phone: true
               }
             }
@@ -416,12 +414,14 @@ export const bloodDonorController = {
         prisma.bloodDonor.groupBy({
           by: ["bloodType"],
           _count: { id: true },
-          where: { isAvailable: true }
+          where: { isAvailable: true },
+          orderBy:{bloodType:"asc"}
         }),
         prisma.bloodDonor.groupBy({
           by: ["city"],
           _count: { id: true },
-          where: { isAvailable: true }
+          where: { isAvailable: true },
+           orderBy:{city:"asc"}
         }),
         prisma.bloodDonor.count({
           where: {
