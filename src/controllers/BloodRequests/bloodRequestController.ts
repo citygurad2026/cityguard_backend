@@ -637,25 +637,29 @@ export const bloodRequestController = {
 
       // البحث عن متبرعين متطابقين
       const matchedDonors = await prisma.bloodDonor.findMany({
-        where: {
-          bloodType: bloodRequest.bloodType,
-          city: bloodRequest.city || undefined, // إذا كانت المدينة موجودة
-          canDonate: true,
-          receiveAlerts: true,
-          // يمكن إضافة المزيد من شروط المطابقة هنا
-          // مثل: lastDonation (أن يكون قد مر وقت كافٍ منذ آخر تبرع)
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              phone: true
-            }
+      where: {
+        bloodType: bloodRequest.bloodType,
+        city: bloodRequest.city || undefined,
+        isAvailable: true,           // بدل canDonate
+        receiveAlerts: true,
+        OR: [
+          { lastDonation: null },
+          { lastDonation: { lte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } }, // آخر 90 يوم
+          { canDonateAfter: { lte: new Date() } }
+        ]
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true
           }
-        },
-        take: 20 // الحد الأقصى للمتبرعين المعروضين
-      });
+        }
+      },
+      take: 20
+    });
+
 
       // إحصاءات
       const stats = {
