@@ -19,8 +19,6 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "https://guard-sand.vercel.app",
-  "https://guard-git-main-citygurad2026s-projects.vercel.app",
-  "https://guard-17qm52iz3-citygurad2026s-projects.vercel.app",
 ];
 
 
