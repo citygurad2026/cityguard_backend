@@ -1,9 +1,10 @@
 {
   "name": "city_guide",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
-    "build":"tsc",
+    "clean": "rmdir /s /q dist",
+    "build": "npm run clean && tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only --clear src/server.ts"
   },
