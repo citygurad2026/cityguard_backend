@@ -18,7 +18,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://guard-sand.vercel.app",
+   process.env.APP_URL || "https://guard-sand.vercel.app",
 ];
 
 
